@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+
+models/
+*.keras
+*.h5
+*.pkl
+
+data/chatbot.db
+
+.vscode/
+
+.env
+
+.streamlit/secrets.toml
