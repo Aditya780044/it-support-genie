@@ -18,7 +18,7 @@ st.set_page_config(
 # ADMIN LOGIN
 # ------------------------------------
 
-ADMIN_PASSWORD = "Bits@2026"      # Change this password
+ADMIN_PASSWORD = "Aditya@78"      # Change this password
 
 st.title("🔐 Admin Dashboard")
 
