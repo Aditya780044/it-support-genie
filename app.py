@@ -250,7 +250,6 @@ with st.sidebar:
 
     st.markdown("---")
 
-    st.subheader("About")
 
     st.info(
         """
