@@ -232,13 +232,13 @@ if user_input:
             }
         )
         # ------------------------------------------------
+# ------------------------------------------------
 # Sidebar
 # ------------------------------------------------
 
 with st.sidebar:
 
     # Logo
-
     if os.path.exists("assets/chatbot.png"):
         st.image("assets/chatbot.png", width=90)
 
@@ -250,17 +250,7 @@ with st.sidebar:
 
     st.markdown("---")
 
-
-    st.info(
-        """
-
-"""
-    )
-
-    st.markdown("---")
-
     # Clear Chat Button
-
     if st.button("🗑 Clear Chat"):
 
         st.session_state.messages = []
