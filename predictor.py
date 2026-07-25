@@ -3,6 +3,7 @@
 # Predictor
 # ==========================================
 
+from textblob import TextBlob
 import joblib
 import numpy as np
 import pandas as pd
@@ -10,19 +11,22 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Load Knowledge Base
+# ------------------------------------------
+# Load Models
+# ------------------------------------------
+
 knowledge_base = joblib.load("models/knowledge_base.pkl")
 
-# Load Embedding Model
 embedding_model = SentenceTransformer("models/embedding_model")
 
-# Load Query Embeddings
 query_embeddings = np.load("models/query_embeddings.npy")
 
-# Load SOP Mapping
 sop_df = pd.read_excel("data/sop_mapping.xlsx")
 
+# ------------------------------------------
 # Greetings
+# ------------------------------------------
+
 GREETINGS = [
     "hi",
     "hello",
@@ -33,13 +37,25 @@ GREETINGS = [
     "good evening"
 ]
 
+# Similarity threshold
+
+THRESHOLD = 0.60
+
+
+# ==========================================
+# Prediction Function
+# ==========================================
 
 def get_response(user_query):
 
     query = user_query.strip().lower()
 
+    # -----------------------------
     # Greeting
+    # -----------------------------
+
     if query in GREETINGS:
+
         return (
             "Greeting",
             "Hello 👋 Welcome to IT Support Genie. How can I help you today?",
@@ -48,13 +64,27 @@ def get_response(user_query):
             1.0
         )
 
-    # Create embedding
-    user_embedding = embedding_model.encode([user_query])
+    # -----------------------------
+    # Spell Correction
+    # -----------------------------
 
-    # Calculate similarity
-    similarity = cosine_similarity(user_embedding, query_embeddings)
+    corrected_query = str(TextBlob(user_query).correct())
 
-    # Best Match
+    # -----------------------------
+    # Create Embedding
+    # -----------------------------
+
+    user_embedding = embedding_model.encode([corrected_query])
+
+    # -----------------------------
+    # Similarity Search
+    # -----------------------------
+
+    similarity = cosine_similarity(
+        user_embedding,
+        query_embeddings
+    )
+
     best_index = np.argmax(similarity)
 
     confidence = float(similarity[0][best_index])
@@ -64,7 +94,10 @@ def get_response(user_query):
     category = row["category"]
     answer = row["answer"]
 
-    # Steps
+    # -----------------------------
+    # Troubleshooting Steps
+    # -----------------------------
+
     steps_text = str(row["steps"])
 
     steps = [
@@ -73,19 +106,21 @@ def get_response(user_query):
         if step.strip()
     ]
 
-    # SOP
+    # -----------------------------
+    # SOP Mapping
+    # -----------------------------
+
     sop = ""
 
     match = sop_df[sop_df["category"] == category]
 
     if not match.empty:
+
         sop = match.iloc[0]["sop_filename"]
 
     # -----------------------------
-    # Unknown Issue Detection
+    # Unknown Query Detection
     # -----------------------------
-
-    THRESHOLD = 0.60
 
     if confidence < THRESHOLD:
 
@@ -106,7 +141,9 @@ Your issue may require manual investigation by the support team.
             confidence
         )
 
+    # -----------------------------
     # Return Best Match
+    # -----------------------------
 
     return (
         category,
