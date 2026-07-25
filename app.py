@@ -20,10 +20,36 @@ create_database()
 # Title
 # ------------------------------------------------
 
-st.title("🤖 AI IT Support Genie")
-st.caption("IT Support & SOP Recommendation System")
+# ------------------------------------------------
+# Custom Header
+# ------------------------------------------------
 
-st.markdown("---")
+st.markdown("""
+<h1 style='text-align:center;color:#1E88E5;'>
+🤖 AI IT Support Genie
+</h1>
+""", unsafe_allow_html=True)
+
+st.markdown(
+"""
+<div style='
+padding:20px;
+border-radius:12px;
+background-color:#F5F7FA;
+border:1px solid #D3D3D3;'>
+
+<h4>Welcome to AI IT Support Genie 👋</h4>
+
+
+<b>How may i help you with:</b>
+
+
+</div>
+""",
+unsafe_allow_html=True
+)
+
+st.write("")
 
 # ------------------------------------------------
 # Session State
@@ -95,20 +121,13 @@ if user_input:
         # Build Response
 
         response = f"""
-### 📌 Issue Category
-
-**{category}**
-
----
+## 🔹 {category}
 
 ### 💡 Solution
 
 {answer}
 
----
-
-### 🔧 Troubleshooting Steps
-
+### 🛠 Troubleshooting
 """
 
         for step in steps:
@@ -163,44 +182,37 @@ if user_input:
 # Sidebar
 # ------------------------------------------------
 
+# ------------------------------------------------
+# Sidebar
+# ------------------------------------------------
+
 with st.sidebar:
 
-    st.header("📌 About")
-
-    st.write(
-        """
-AI IT Support Genie is an intelligent chatbot that helps users resolve common IT issues and recommends troubleshooting steps and SOP documents.
-"""
+    st.image(
+        "https://img.icons8.com/color/96/chatbot.png",
+        width=70
     )
 
-    st.markdown("---")
+    st.title("IT Support Genie")
 
-    st.subheader("Supported Categories")
+    st.caption("Version 2.0")
 
-    categories = [
-        "VPN",
-        "Outlook",
-        "Printer",
-        "WiFi",
-        "Account",
-        "Performance",
-        "Citrix",
-        "Microsoft 365",
-        "Security",
-        "Software"
-    ]
-
-    for item in categories:
-        st.write("✅", item)
+    st.write("BITS Pilani Dissertation Project")
 
     st.markdown("---")
 
-    if st.button("🗑 Clear Chat"):
+    dark_mode = st.toggle("🌙 Dark Mode")
+
+    st.markdown("---")
+
+    if st.button(
+        "🗑 Clear Chat",
+        key="clear_chat"
+    ):
 
         st.session_state.messages = []
 
         st.rerun()
-
 # ------------------------------------------------
 # Footer
 # ------------------------------------------------

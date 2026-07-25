@@ -1,0 +1,176 @@
+import streamlit as st
+import sqlite3
+import pandas as pd
+import plotly.express as px
+from io import BytesIO
+
+st.set_page_config(
+    page_title="Dashboard",
+    page_icon="📊",
+    layout="wide"
+)
+
+st.title("📊 AI IT Support Genie Dashboard")
+
+# -----------------------------
+# Load Database
+# -----------------------------
+
+conn = sqlite3.connect("data/chatbot.db")
+
+try:
+    df = pd.read_sql("SELECT * FROM query_log", conn)
+except:
+    df = pd.DataFrame()
+
+conn.close()
+
+# -----------------------------
+# No Data
+# -----------------------------
+
+if df.empty:
+
+    st.warning("No chatbot data available.")
+
+    st.stop()
+
+# -----------------------------
+# Top Metrics
+# -----------------------------
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+
+    st.metric(
+        "Total Queries",
+        len(df)
+    )
+
+with col2:
+
+    st.metric(
+        "Categories",
+        df["predicted_category"].nunique()
+    )
+
+with col3:
+
+    st.metric(
+        "SOP Recommended",
+        df["sop_recommended"].replace("", pd.NA).dropna().count()
+    )
+
+st.markdown("---")
+
+# -----------------------------
+# Category Chart
+# -----------------------------
+
+st.subheader("📊 Category Distribution")
+
+category_count = (
+    df["predicted_category"]
+    .value_counts()
+    .reset_index()
+)
+
+category_count.columns = [
+    "Category",
+    "Count"
+]
+
+fig = px.pie(
+    category_count,
+    names="Category",
+    values="Count",
+    hole=0.4
+)
+
+st.plotly_chart(
+    fig,
+    use_container_width=True
+)
+
+# -----------------------------
+# Query Trend
+# -----------------------------
+
+st.subheader("📈 Query Trend")
+
+trend = (
+    df.groupby("timestamp")
+    .size()
+    .reset_index(name="Queries")
+)
+
+fig2 = px.line(
+    trend,
+    x="timestamp",
+    y="Queries",
+    markers=True
+)
+
+st.plotly_chart(
+    fig2,
+    use_container_width=True
+)
+
+# -----------------------------
+# Recent Queries
+# -----------------------------
+
+st.subheader("📝 Recent Queries")
+
+st.dataframe(
+    df.sort_values(
+        "id",
+        ascending=False
+    ),
+    use_container_width=True
+)
+
+# -----------------------------
+# Download Excel
+# -----------------------------
+
+buffer = BytesIO()
+
+with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+
+    df.to_excel(
+        writer,
+        index=False
+    )
+
+st.download_button(
+    "📥 Download Query History",
+    buffer.getvalue(),
+    file_name="Query_History.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
+# -----------------------------
+# Delete Database
+# -----------------------------
+
+st.markdown("---")
+
+if st.button("🗑 Delete All Records"):
+
+    conn = sqlite3.connect("data/chatbot.db")
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM query_log"
+    )
+
+    conn.commit()
+
+    conn.close()
+
+    st.success("Database Cleared Successfully")
+
+    st.rerun()
