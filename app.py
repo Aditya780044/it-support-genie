@@ -130,10 +130,30 @@ if user_input:
 ### 🛠 Troubleshooting
 """
 
-        for step in steps:
+        formatted_steps = []
 
-            if step.strip():
-                response += f"- {step.strip()}\n"
+i = 0
+
+while i < len(steps):
+
+    current = steps[i].strip()
+
+    # If current item is a number and next item exists
+    if current.isdigit() and i + 1 < len(steps):
+
+        formatted_steps.append(f"{current} - {steps[i+1].strip()}")
+
+        i += 2
+
+    else:
+
+        formatted_steps.append(current)
+
+        i += 1
+
+for step in formatted_steps:
+
+    response += f"{step}\n"
 
         # SOP
 
