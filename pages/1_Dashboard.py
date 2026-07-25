@@ -4,30 +4,63 @@ import pandas as pd
 import plotly.express as px
 from io import BytesIO
 
+# ------------------------------------
+# Page Config
+# ------------------------------------
+
 st.set_page_config(
     page_title="Dashboard",
     page_icon="📊",
     layout="wide"
 )
 
+# ------------------------------------
+# ADMIN LOGIN
+# ------------------------------------
+
+ADMIN_PASSWORD = "Bits@2026"      # Change this password
+
+st.title("🔐 Admin Dashboard")
+
+password = st.text_input(
+    "Enter Admin Password",
+    type="password"
+)
+
+if password != ADMIN_PASSWORD:
+
+    st.warning("This dashboard is accessible only to administrators.")
+
+    st.info("Please enter the administrator password.")
+
+    st.stop()
+
+# ------------------------------------
+# Dashboard Starts
+# ------------------------------------
+
+st.success("✅ Login Successful")
+
 st.title("📊 AI IT Support Genie Dashboard")
 
-# -----------------------------
+# ------------------------------------
 # Load Database
-# -----------------------------
+# ------------------------------------
 
 conn = sqlite3.connect("data/chatbot.db")
 
 try:
     df = pd.read_sql("SELECT * FROM query_log", conn)
+
 except:
+
     df = pd.DataFrame()
 
 conn.close()
 
-# -----------------------------
+# ------------------------------------
 # No Data
-# -----------------------------
+# ------------------------------------
 
 if df.empty:
 
@@ -35,9 +68,9 @@ if df.empty:
 
     st.stop()
 
-# -----------------------------
+# ------------------------------------
 # Top Metrics
-# -----------------------------
+# ------------------------------------
 
 col1, col2, col3 = st.columns(3)
 
@@ -64,9 +97,9 @@ with col3:
 
 st.markdown("---")
 
-# -----------------------------
-# Category Chart
-# -----------------------------
+# ------------------------------------
+# Category Distribution
+# ------------------------------------
 
 st.subheader("📊 Category Distribution")
 
@@ -85,7 +118,7 @@ fig = px.pie(
     category_count,
     names="Category",
     values="Count",
-    hole=0.4
+    hole=0.45
 )
 
 st.plotly_chart(
@@ -93,9 +126,9 @@ st.plotly_chart(
     use_container_width=True
 )
 
-# -----------------------------
+# ------------------------------------
 # Query Trend
-# -----------------------------
+# ------------------------------------
 
 st.subheader("📈 Query Trend")
 
@@ -117,9 +150,9 @@ st.plotly_chart(
     use_container_width=True
 )
 
-# -----------------------------
+# ------------------------------------
 # Recent Queries
-# -----------------------------
+# ------------------------------------
 
 st.subheader("📝 Recent Queries")
 
@@ -131,9 +164,11 @@ st.dataframe(
     use_container_width=True
 )
 
-# -----------------------------
+# ------------------------------------
 # Download Excel
-# -----------------------------
+# ------------------------------------
+
+st.markdown("---")
 
 buffer = BytesIO()
 
@@ -145,19 +180,23 @@ with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
     )
 
 st.download_button(
-    "📥 Download Query History",
-    buffer.getvalue(),
+    label="📥 Download Query History",
+    data=buffer.getvalue(),
     file_name="Query_History.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    key="download_excel"
 )
 
-# -----------------------------
-# Delete Database
-# -----------------------------
+# ------------------------------------
+# Delete Records
+# ------------------------------------
 
 st.markdown("---")
 
-if st.button("🗑 Delete All Records"):
+if st.button(
+    "🗑 Delete All Records",
+    key="delete_records"
+):
 
     conn = sqlite3.connect("data/chatbot.db")
 
@@ -171,6 +210,6 @@ if st.button("🗑 Delete All Records"):
 
     conn.close()
 
-    st.success("Database Cleared Successfully")
+    st.success("✅ Database Cleared Successfully")
 
     st.rerun()
