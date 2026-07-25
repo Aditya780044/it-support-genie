@@ -157,7 +157,7 @@ if user_input:
 
         for step in formatted_steps:
 
-            response += f"{step}\n"
+            response += f"{step}\n\n"
 
         # SOP
 
