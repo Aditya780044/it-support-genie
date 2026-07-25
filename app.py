@@ -4,9 +4,9 @@ import os
 from predictor import get_response
 from database import create_database, save_query
 
-# -----------------------------
+# ------------------------------------------------
 # Page Config
-# -----------------------------
+# ------------------------------------------------
 
 st.set_page_config(
     page_title="IT Support Genie",
@@ -16,40 +16,41 @@ st.set_page_config(
 
 create_database()
 
-# -----------------------------
+# ------------------------------------------------
 # Title
-# -----------------------------
+# ------------------------------------------------
 
 st.title("🤖 AI IT Support Genie")
 st.caption("IT Support & SOP Recommendation System")
 
 st.markdown("---")
 
-# -----------------------------
+# ------------------------------------------------
 # Session State
-# -----------------------------
+# ------------------------------------------------
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# -----------------------------
-# Display Chat
-# -----------------------------
+# ------------------------------------------------
+# Display Previous Messages
+# ------------------------------------------------
 
 for message in st.session_state.messages:
 
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# -----------------------------
-# User Input
-# -----------------------------
+# ------------------------------------------------
+# Chat Input
+# ------------------------------------------------
 
 user_input = st.chat_input("Type your IT issue here...")
 
 if user_input:
 
-    # Display user message
+    # Show User Message
+
     st.session_state.messages.append(
         {
             "role": "user",
@@ -60,25 +61,43 @@ if user_input:
     with st.chat_message("user"):
         st.markdown(user_input)
 
-    # Get Prediction
+    # Get AI Response
 
     category, answer, steps, sop, confidence = get_response(user_input)
 
-    # Save in Database
+    # --------------------------------------------
+    # Greeting Response
+    # --------------------------------------------
 
-    save_query(
-        user_input,
-        category,
-        round(confidence, 2),
-        sop
-    )
+    if category == "Greeting":
 
-    # Build Response
+        with st.chat_message("assistant"):
+            st.markdown(answer)
 
-    response = f"""
-### 📌 Category
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": answer
+            }
+        )
 
-{category}
+    else:
+
+        # Save Query
+
+        save_query(
+            user_input,
+            category,
+            round(confidence, 2),
+            sop
+        )
+
+        # Build Response
+
+        response = f"""
+### 📌 Issue Category
+
+**{category}**
 
 ---
 
@@ -92,48 +111,57 @@ if user_input:
 
 """
 
-    for step in steps:
+        for step in steps:
 
-        response += f"- {step}\n"
+            if step.strip():
+                response += f"- {step.strip()}\n"
 
-    response += "\n---\n"
+        # SOP
 
-    response += f"### 📄 Recommended SOP\n\n{sop}\n\n"
+        if sop:
 
-    # Confidence removed
-    # Display Bot Response
+            response += f"""
 
-    with st.chat_message("assistant"):
+---
 
-        st.markdown(response)
+### 📄 Recommended SOP
 
-        # Download SOP
+{sop}
 
-        sop_path = os.path.join("sops", sop)
+"""
 
-        if os.path.exists(sop_path):
+        # Display Assistant
 
-            with open(sop_path, "rb") as file:
+        with st.chat_message("assistant"):
 
-                st.download_button(
-                    "📥 Download SOP",
-                    file,
-                    file_name=sop
-                )
+            st.markdown(response)
 
-        else:
+            # SOP Download
 
-            st.info("SOP file not available.")
+            if sop:
 
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "content": response
-        }
-    )
-    # -----------------------------
+                sop_path = os.path.join("sops", sop)
+
+                if os.path.isfile(sop_path):
+
+                    with open(sop_path, "rb") as file:
+
+                        st.download_button(
+                            "📥 Download SOP",
+                            file,
+                            file_name=sop
+                        )
+
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": response
+            }
+        )
+
+# ------------------------------------------------
 # Sidebar
-# -----------------------------
+# ------------------------------------------------
 
 with st.sidebar:
 
@@ -141,11 +169,8 @@ with st.sidebar:
 
     st.write(
         """
-        **AI IT Support Genie**
-
-        This chatbot helps users solve common IT issues by
-        recommending troubleshooting steps and SOP documents.
-        """
+AI IT Support Genie is an intelligent chatbot that helps users resolve common IT issues and recommends troubleshooting steps and SOP documents.
+"""
     )
 
     st.markdown("---")
@@ -160,7 +185,7 @@ with st.sidebar:
         "Account",
         "Performance",
         "Citrix",
-        "M365",
+        "Microsoft 365",
         "Security",
         "Software"
     ]
@@ -176,12 +201,10 @@ with st.sidebar:
 
         st.rerun()
 
-# -----------------------------
+# ------------------------------------------------
 # Footer
-# -----------------------------
+# ------------------------------------------------
 
 st.markdown("---")
 
-st.caption(
-    "© 2026 AI IT Support Genie | BITS Pilani Dissertation Project"
-)
+st.caption("© 2026 AI IT Support Genie | BITS Pilani Dissertation Project")
