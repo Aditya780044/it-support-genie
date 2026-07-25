@@ -34,10 +34,11 @@ GREETINGS = [
     "hii",
     "good morning",
     "good afternoon",
-    "good evening"
+    "good evening",
+    "good night"
 ]
 
-# Similarity threshold
+# Similarity Threshold
 
 THRESHOLD = 0.60
 
@@ -48,7 +49,22 @@ THRESHOLD = 0.60
 
 def get_response(user_query):
 
-    query = user_query.strip().lower()
+    # -----------------------------
+    # Safety
+    # -----------------------------
+
+    user_query = str(user_query).strip()
+
+    if user_query == "":
+        return (
+            "Unknown",
+            "Please enter your IT issue.",
+            [],
+            "",
+            0.0
+        )
+
+    query = user_query.lower()
 
     # -----------------------------
     # Greeting
@@ -71,7 +87,7 @@ def get_response(user_query):
     corrected_query = str(TextBlob(user_query).correct())
 
     # -----------------------------
-    # Create Embedding
+    # Generate Embedding
     # -----------------------------
 
     user_embedding = embedding_model.encode([corrected_query])
@@ -88,6 +104,33 @@ def get_response(user_query):
     best_index = np.argmax(similarity)
 
     confidence = float(similarity[0][best_index])
+
+    # -----------------------------
+    # Unknown Issue Detection
+    # -----------------------------
+
+    if confidence < THRESHOLD:
+
+        return (
+            "Unknown",
+            """👋 Hello!
+
+Thank you for contacting AI IT Support Genie.
+
+Unfortunately, I couldn't find a matching solution for your issue in the current knowledge base.
+
+📞 Please contact the IT Helpdesk for further assistance.
+
+Your issue may require manual investigation by the support team.
+""",
+            [],
+            "",
+            confidence
+        )
+
+    # -----------------------------
+    # Best Match
+    # -----------------------------
 
     row = knowledge_base.iloc[best_index]
 
@@ -115,34 +158,10 @@ def get_response(user_query):
     match = sop_df[sop_df["category"] == category]
 
     if not match.empty:
-
         sop = match.iloc[0]["sop_filename"]
 
     # -----------------------------
-    # Unknown Query Detection
-    # -----------------------------
-
-    if confidence < THRESHOLD:
-
-        return (
-            "Unknown",
-            """👋 Hello!
-
-Thank you for contacting AI IT Support Genie.
-
-Unfortunately, I couldn't find a matching solution for your issue in the current knowledge base.
-
-📞 Please contact the IT Helpdesk for further assistance.
-
-Your issue may require manual investigation by the support team.
-""",
-            [],
-            "",
-            confidence
-        )
-
-    # -----------------------------
-    # Return Best Match
+    # Return Result
     # -----------------------------
 
     return (
