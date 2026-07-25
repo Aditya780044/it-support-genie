@@ -128,32 +128,36 @@ if user_input:
 {answer}
 
 ### 🛠 Troubleshooting
+
 """
+
+        # Format troubleshooting steps
 
         formatted_steps = []
 
-i = 0
+        i = 0
 
-while i < len(steps):
+        while i < len(steps):
 
-    current = steps[i].strip()
+            current = steps[i].strip()
 
-    # If current item is a number and next item exists
-    if current.isdigit() and i + 1 < len(steps):
+            if current.isdigit() and i + 1 < len(steps):
 
-        formatted_steps.append(f"{current} - {steps[i+1].strip()}")
+                formatted_steps.append(f"{current} - {steps[i + 1].strip()}")
 
-        i += 2
+                i += 2
 
-    else:
+            else:
 
-        formatted_steps.append(current)
+                if current:
 
-        i += 1
+                    formatted_steps.append(current)
 
-for step in formatted_steps:
+                i += 1
 
-    response += f"{step}\n"
+        for step in formatted_steps:
+
+            response += f"{step}\n"
 
         # SOP
 
@@ -175,7 +179,7 @@ for step in formatted_steps:
 
             st.markdown(response)
 
-            # SOP Download
+            # Download SOP
 
             if sop:
 
@@ -185,11 +189,15 @@ for step in formatted_steps:
 
                     with open(sop_path, "rb") as file:
 
-                        st.download_button(
-                            "📥 Download SOP",
-                            file,
-                            file_name=sop
-                        )
+                       st.download_button(
+    label="📥 Download SOP",
+    data=file.read(),
+    file_name=sop,
+    mime="application/pdf",
+    key=f"sop_{sop}"
+)
+
+        # Save assistant message
 
         st.session_state.messages.append(
             {
@@ -197,11 +205,6 @@ for step in formatted_steps:
                 "content": response
             }
         )
-
-# ------------------------------------------------
-# Sidebar
-# ------------------------------------------------
-
 # ------------------------------------------------
 # Sidebar
 # ------------------------------------------------
