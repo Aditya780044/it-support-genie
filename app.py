@@ -254,16 +254,7 @@ with st.sidebar:
 
     st.info(
         """
-AI IT Support Genie is an intelligent chatbot developed to help users
-resolve common IT issues using Artificial Intelligence and Semantic Search.
 
-Features:
-- AI-powered IT Support
-- Troubleshooting Assistance
-- SOP Recommendation
-- SOP Download
-- Semantic Search
-- Dashboard Analytics
 """
     )
 
