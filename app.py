@@ -41,7 +41,7 @@ border:1px solid #D3D3D3;'>
 <h4>Welcome to AI IT Support Genie 👋</h4>
 
 
-<b>How may i help you with:</b>
+<b>How may i help you:</b>
 
 
 </div>
@@ -188,20 +188,13 @@ if user_input:
 
 with st.sidebar:
 
-    st.image(
-        "https://img.icons8.com/color/96/chatbot.png",
-        width=70
-    )
+    st.image("assets/chatbot.png", width=70)
 
     st.title("IT Support Genie")
 
     st.caption("Version 2.0")
 
     st.write("BITS Pilani Dissertation Project")
-
-    st.markdown("---")
-
-    dark_mode = st.toggle("🌙 Dark Mode")
 
     st.markdown("---")
 
