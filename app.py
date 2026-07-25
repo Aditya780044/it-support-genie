@@ -5,7 +5,7 @@ from predictor import get_response
 from database import create_database, save_query
 
 # ------------------------------------------------
-# Page Config
+# Page Configuration
 # ------------------------------------------------
 
 st.set_page_config(
@@ -14,11 +14,11 @@ st.set_page_config(
     layout="wide"
 )
 
-create_database()
+# ------------------------------------------------
+# Initialize Database
+# ------------------------------------------------
 
-# ------------------------------------------------
-# Title
-# ------------------------------------------------
+create_database()
 
 # ------------------------------------------------
 # Custom Header
@@ -32,17 +32,20 @@ st.markdown("""
 
 st.markdown(
 """
-<div style='
+<div style="
 padding:20px;
 border-radius:12px;
 background-color:#F5F7FA;
-border:1px solid #D3D3D3;'>
+border:1px solid #D3D3D3;">
 
 <h4>Welcome to AI IT Support Genie 👋</h4>
 
+<p>
+I'm here to help you resolve common IT issues by providing
+solutions, troubleshooting steps, and SOP recommendations.
+</p>
 
-<b>How may i help you:</b>
-
+<b>How may I help you today?</b>
 
 </div>
 """,
@@ -59,7 +62,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # ------------------------------------------------
-# Display Previous Messages
+# Display Previous Chat Messages
 # ------------------------------------------------
 
 for message in st.session_state.messages:
@@ -68,14 +71,16 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # ------------------------------------------------
-# Chat Input
+# User Input
 # ------------------------------------------------
 
-user_input = st.chat_input("Type your IT issue here...")
+user_input = st.chat_input(
+    "Type your IT issue here..."
+)
 
 if user_input:
 
-    # Show User Message
+    # Display User Message
 
     st.session_state.messages.append(
         {
@@ -89,58 +94,57 @@ if user_input:
 
     # Get AI Response
 
-    # Get AI Response
+    category, answer, steps, sop, confidence = get_response(user_input)
+        # ------------------------------------------------
+    # Greeting Response
+    # ------------------------------------------------
 
-category, answer, steps, sop, confidence = get_response(user_input)
+    if category == "Greeting":
 
-# --------------------------------------------
-# Greeting
-# --------------------------------------------
+        with st.chat_message("assistant"):
+            st.markdown(answer)
 
-if category == "Greeting":
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": answer
+            }
+        )
 
-    with st.chat_message("assistant"):
-        st.markdown(answer)
+    # ------------------------------------------------
+    # Unknown Issue
+    # ------------------------------------------------
 
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "content": answer
-        }
-    )
+    elif category == "Unknown":
 
-# --------------------------------------------
-# Unknown Issue
-# --------------------------------------------
+        with st.chat_message("assistant"):
+            st.markdown(answer)
 
-elif category == "Unknown":
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": answer
+            }
+        )
 
-    with st.chat_message("assistant"):
-        st.markdown(answer)
+    # ------------------------------------------------
+    # Known Issue
+    # ------------------------------------------------
 
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "content": answer
-        }
-    )
+    else:
 
-# --------------------------------------------
-# Known Issue
-# --------------------------------------------
+        # Save Query
 
-else:
+        save_query(
+            user_input,
+            category,
+            round(confidence, 2),
+            sop
+        )
 
-    # Save query
+        # Build Response
 
-    save_query(
-        user_input,
-        category,
-        round(confidence, 2),
-        sop
-    )
-
-    response = f"""
+        response = f"""
 ## 🔹 {category}
 
 ### 💡 Solution
@@ -151,41 +155,41 @@ else:
 
 """
 
-    # Format troubleshooting steps
+        # Format Troubleshooting Steps
 
-    formatted_steps = []
+        formatted_steps = []
 
-    i = 0
+        i = 0
 
-    while i < len(steps):
+        while i < len(steps):
 
-        current = steps[i].strip()
+            current = steps[i].strip()
 
-        if current.isdigit() and i + 1 < len(steps):
+            if current.isdigit() and i + 1 < len(steps):
 
-            formatted_steps.append(
-                f"{current} - {steps[i + 1].strip()}"
-            )
+                formatted_steps.append(
+                    f"{current} - {steps[i + 1].strip()}"
+                )
 
-            i += 2
+                i += 2
 
-        else:
+            else:
 
-            if current:
+                if current:
 
-                formatted_steps.append(current)
+                    formatted_steps.append(current)
 
-            i += 1
+                i += 1
 
-    for step in formatted_steps:
+        for step in formatted_steps:
 
-        response += f"{step}\n\n"
+            response += f"{step}\n\n"
 
-    # SOP
+        # SOP Section
 
-    if sop:
+        if sop:
 
-        response += f"""
+            response += f"""
 
 ---
 
@@ -195,31 +199,90 @@ else:
 
 """
 
-    # Display response
+        # Display Assistant Response
 
-    with st.chat_message("assistant"):
+        with st.chat_message("assistant"):
 
-        st.markdown(response)
+            st.markdown(response)
 
-        if sop:
+            # Download SOP
 
-            sop_path = os.path.join("sops", sop)
+            if sop:
 
-            if os.path.isfile(sop_path):
+                sop_path = os.path.join("sops", sop)
 
-                with open(sop_path, "rb") as file:
+                if os.path.exists(sop_path):
 
-                    st.download_button(
-                        label="📥 Download SOP",
-                        data=file.read(),
-                        file_name=sop,
-                        mime="application/pdf",
-                        key=f"sop_{sop}"
-                    )
+                    with open(sop_path, "rb") as file:
 
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "content": response
-        }
+                        st.download_button(
+                            label="📥 Download SOP",
+                            data=file.read(),
+                            file_name=sop,
+                            mime="application/pdf",
+                            key=f"sop_{sop}"
+                        )
+
+        # Save Assistant Response
+
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": response
+            }
+        )
+        # ------------------------------------------------
+# Sidebar
+# ------------------------------------------------
+
+with st.sidebar:
+
+    # Logo
+
+    if os.path.exists("assets/chatbot.png"):
+        st.image("assets/chatbot.png", width=90)
+
+    st.title("IT Support Genie")
+
+    st.caption("Version 2.0")
+
+    st.write("BITS Pilani Dissertation Project")
+
+    st.markdown("---")
+
+    st.subheader("About")
+
+    st.info(
+        """
+AI IT Support Genie is an intelligent chatbot developed to help users
+resolve common IT issues using Artificial Intelligence and Semantic Search.
+
+Features:
+- AI-powered IT Support
+- Troubleshooting Assistance
+- SOP Recommendation
+- SOP Download
+- Semantic Search
+- Dashboard Analytics
+"""
     )
+
+    st.markdown("---")
+
+    # Clear Chat Button
+
+    if st.button("🗑 Clear Chat"):
+
+        st.session_state.messages = []
+
+        st.rerun()
+
+# ------------------------------------------------
+# Footer
+# ------------------------------------------------
+
+st.markdown("---")
+
+st.caption(
+    "© 2026 AI IT Support Genie | BITS Pilani Dissertation Project"
+)
