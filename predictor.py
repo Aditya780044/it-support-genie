@@ -81,6 +81,33 @@ def get_response(user_query):
     if not match.empty:
         sop = match.iloc[0]["sop_filename"]
 
+    # -----------------------------
+    # Unknown Issue Detection
+    # -----------------------------
+
+    THRESHOLD = 0.60
+
+    if confidence < THRESHOLD:
+
+        return (
+            "Unknown",
+            """👋 Hello!
+
+Thank you for contacting AI IT Support Genie.
+
+Unfortunately, I couldn't find a matching solution for your issue in the current knowledge base.
+
+📞 Please contact the IT Helpdesk for further assistance.
+
+Your issue may require manual investigation by the support team.
+""",
+            [],
+            "",
+            confidence
+        )
+
+    # Return Best Match
+
     return (
         category,
         answer,

@@ -89,38 +89,58 @@ if user_input:
 
     # Get AI Response
 
-    category, answer, steps, sop, confidence = get_response(user_input)
+    # Get AI Response
 
-    # --------------------------------------------
-    # Greeting Response
-    # --------------------------------------------
+category, answer, steps, sop, confidence = get_response(user_input)
 
-    if category == "Greeting":
+# --------------------------------------------
+# Greeting
+# --------------------------------------------
 
-        with st.chat_message("assistant"):
-            st.markdown(answer)
+if category == "Greeting":
 
-        st.session_state.messages.append(
-            {
-                "role": "assistant",
-                "content": answer
-            }
-        )
+    with st.chat_message("assistant"):
+        st.markdown(answer)
 
-    else:
+    st.session_state.messages.append(
+        {
+            "role": "assistant",
+            "content": answer
+        }
+    )
 
-        # Save Query
+# --------------------------------------------
+# Unknown Issue
+# --------------------------------------------
 
-        save_query(
-            user_input,
-            category,
-            round(confidence, 2),
-            sop
-        )
+elif category == "Unknown":
 
-        # Build Response
+    with st.chat_message("assistant"):
+        st.markdown(answer)
 
-        response = f"""
+    st.session_state.messages.append(
+        {
+            "role": "assistant",
+            "content": answer
+        }
+    )
+
+# --------------------------------------------
+# Known Issue
+# --------------------------------------------
+
+else:
+
+    # Save query
+
+    save_query(
+        user_input,
+        category,
+        round(confidence, 2),
+        sop
+    )
+
+    response = f"""
 ## 🔹 {category}
 
 ### 💡 Solution
@@ -131,39 +151,41 @@ if user_input:
 
 """
 
-        # Format troubleshooting steps
+    # Format troubleshooting steps
 
-        formatted_steps = []
+    formatted_steps = []
 
-        i = 0
+    i = 0
 
-        while i < len(steps):
+    while i < len(steps):
 
-            current = steps[i].strip()
+        current = steps[i].strip()
 
-            if current.isdigit() and i + 1 < len(steps):
+        if current.isdigit() and i + 1 < len(steps):
 
-                formatted_steps.append(f"{current} - {steps[i + 1].strip()}")
+            formatted_steps.append(
+                f"{current} - {steps[i + 1].strip()}"
+            )
 
-                i += 2
+            i += 2
 
-            else:
+        else:
 
-                if current:
+            if current:
 
-                    formatted_steps.append(current)
+                formatted_steps.append(current)
 
-                i += 1
+            i += 1
 
-        for step in formatted_steps:
+    for step in formatted_steps:
 
-            response += f"{step}\n\n"
+        response += f"{step}\n\n"
 
-        # SOP
+    # SOP
 
-        if sop:
+    if sop:
 
-            response += f"""
+        response += f"""
 
 ---
 
@@ -173,66 +195,31 @@ if user_input:
 
 """
 
-        # Display Assistant
+    # Display response
 
-        with st.chat_message("assistant"):
+    with st.chat_message("assistant"):
 
-            st.markdown(response)
+        st.markdown(response)
 
-            # Download SOP
+        if sop:
 
-            if sop:
+            sop_path = os.path.join("sops", sop)
 
-                sop_path = os.path.join("sops", sop)
+            if os.path.isfile(sop_path):
 
-                if os.path.isfile(sop_path):
+                with open(sop_path, "rb") as file:
 
-                    with open(sop_path, "rb") as file:
+                    st.download_button(
+                        label="📥 Download SOP",
+                        data=file.read(),
+                        file_name=sop,
+                        mime="application/pdf",
+                        key=f"sop_{sop}"
+                    )
 
-                       st.download_button(
-    label="📥 Download SOP",
-    data=file.read(),
-    file_name=sop,
-    mime="application/pdf",
-    key=f"sop_{sop}"
-)
-
-        # Save assistant message
-
-        st.session_state.messages.append(
-            {
-                "role": "assistant",
-                "content": response
-            }
-        )
-# ------------------------------------------------
-# Sidebar
-# ------------------------------------------------
-
-with st.sidebar:
-
-    st.image("assets/chatbot.png", width=70)
-
-    st.title("IT Support Genie")
-
-    st.caption("Version 2.0")
-
-    st.write("BITS Pilani Dissertation Project")
-
-    st.markdown("---")
-
-    if st.button(
-        "🗑 Clear Chat",
-        key="clear_chat"
-    ):
-
-        st.session_state.messages = []
-
-        st.rerun()
-# ------------------------------------------------
-# Footer
-# ------------------------------------------------
-
-st.markdown("---")
-
-st.caption("© 2026 AI IT Support Genie | BITS Pilani Dissertation Project")
+    st.session_state.messages.append(
+        {
+            "role": "assistant",
+            "content": response
+        }
+    )
