@@ -6,3 +6,4 @@ scikit-learn
 openpyxl
 joblib
 plotly
+textblob
