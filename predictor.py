@@ -3,7 +3,6 @@
 # Predictor
 # ==========================================
 
-from textblob import TextBlob
 import joblib
 import numpy as np
 import pandas as pd
@@ -81,10 +80,14 @@ def get_response(user_query):
         )
 
     # -----------------------------
-    # Spell Correction
+    # IMPORTANT
+    # -----------------------------
+    # Temporarily disable TextBlob.
+    # It often changes IT words like VPN,
+    # Outlook, FortiClient, Citrix etc.
     # -----------------------------
 
-    corrected_query = str(TextBlob(user_query).correct())
+    corrected_query = user_query
 
     # -----------------------------
     # Generate Embedding
@@ -104,6 +107,18 @@ def get_response(user_query):
     best_index = np.argmax(similarity)
 
     confidence = float(similarity[0][best_index])
+
+    # -----------------------------
+    # Debug
+    # -----------------------------
+
+    print("=" * 60)
+    print("Query:", user_query)
+    print("Corrected:", corrected_query)
+    print("Confidence:", confidence)
+    print("Matched Query:", knowledge_base.iloc[best_index]["query"])
+    print("Matched Category:", knowledge_base.iloc[best_index]["category"])
+    print("=" * 60)
 
     # -----------------------------
     # Unknown Issue Detection
@@ -145,7 +160,7 @@ Your issue may require manual investigation by the support team.
 
     steps = [
         step.strip()
-        for step in steps_text.split(".")
+        for step in steps_text.split("|")
         if step.strip()
     ]
 
